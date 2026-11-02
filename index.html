@@ -1,0 +1,1365 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gambia GeoJSON Intelligence | GBoS GEOAI</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+:root{
+  --navy:#102b46;
+  --navy2:#173e60;
+  --blue:#1976b9;
+  --cyan:#18a7c9;
+  --green:#16845b;
+  --orange:#e69a37;
+  --red:#c94b50;
+  --bg:#edf2f7;
+  --panel:#ffffff;
+  --line:#dce4ec;
+  --text:#25384b;
+  --muted:#758598;
+  --soft:#f5f8fb;
+  --shadow:0 2px 9px rgba(22,43,65,.07);
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;font-family:Inter,Arial,sans-serif;color:var(--text);background:var(--bg)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+header{
+  height:65px;flex-shrink:0;background:linear-gradient(105deg,var(--navy),var(--navy2));
+  color:#fff;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;gap:15px;z-index:1001
+}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand-mark{
+  width:37px;height:37px;border-radius:9px;background:#ffffff18;
+  border:1px solid #ffffff44;display:grid;place-items:center;font-size:20px
+}
+.brand h1{font-size:15px;letter-spacing:.5px;margin:0;font-weight:800}
+.brand p{font-size:10px;margin:4px 0 0;color:#c9d9e8}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-pill{font-size:10px;padding:7px 10px;border:1px solid #ffffff38;border-radius:20px;color:#e6f0f8}
+.header-status{font-size:10px;color:#b9d9ed}
+
+.toolbar{
+  height:43px;flex-shrink:0;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:7px;padding:0 13px;overflow-x:auto
+}
+.toolbar button,.toolbar select{
+  border:1px solid var(--line);background:white;color:#38536b;border-radius:5px;
+  padding:6px 10px;font-size:10px;white-space:nowrap
+}
+.toolbar button:hover{background:#edf6fc;border-color:#9dc6e4}
+.toolbar .primary{background:var(--blue);color:white;border-color:var(--blue)}
+.toolbar .danger{color:var(--red)}
+.toolbar-spacer{flex:1}
+
+.workspace{
+  flex:1;min-height:0;display:grid;
+  grid-template-columns:minmax(260px,300px) minmax(350px,1fr) minmax(280px,320px);
+  gap:9px;padding:9px
+}
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:var(--shadow)
+}
+.panel-head{
+  min-height:40px;padding:10px 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:#fbfcfd;flex-shrink:0
+}
+.panel-head h2{font-size:11px;margin:0;font-weight:800;color:var(--navy);letter-spacing:.45px}
+.panel-head span{font-size:9px;color:var(--muted)}
+.panel-body{padding:11px;overflow-y:auto;min-height:0;flex:1}
+.panel-body::-webkit-scrollbar{width:5px}
+.panel-body::-webkit-scrollbar-thumb{background:#ccd7e1;border-radius:10px}
+
+.section{
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;
+  color:#52708a;border-bottom:1px solid #e9eef3;padding:4px 0 7px;margin:13px 0 7px
+}
+.section:first-child{margin-top:0}
+label{display:block;font-size:10px;font-weight:700;color:#5e7082;margin:8px 0 5px}
+input,select,textarea{
+  width:100%;border:1px solid #d8e1e9;background:#fff;border-radius:5px;
+  padding:8px;font-size:10px;color:var(--text);outline:none;min-width:0
+}
+input:focus,select:focus,textarea:focus{border-color:#64a9d6;box-shadow:0 0 0 2px #1976b918}
+textarea{resize:vertical;min-height:65px}
+button.btn{
+  border:1px solid var(--line);background:#fff;color:#34516a;border-radius:5px;
+  padding:8px 9px;font-size:10px;font-weight:700
+}
+button.btn:hover{background:#f1f7fc}
+button.btn.primary{background:var(--blue);color:white;border-color:var(--blue)}
+button.btn.green{background:var(--green);color:white;border-color:var(--green)}
+button.btn.red{background:var(--red);color:white;border-color:var(--red)}
+button.btn.dark{background:var(--navy);color:white;border-color:var(--navy)}
+button.btn.small{padding:5px 7px;font-size:9px}
+.row{display:flex;gap:6px;align-items:center}
+.row>*{min-width:0;flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.muted{font-size:9px;color:var(--muted);line-height:1.5}
+.help{background:#f1f7fc;border:1px solid #dcebf6;border-radius:5px;padding:8px;font-size:9px;color:#5b7185;line-height:1.5;margin-top:8px}
+.status{font-size:9px;color:var(--muted);min-height:14px;margin-top:6px}
+.hidden{display:none!important}
+
+.dropzone{
+  border:1.5px dashed #a8bfd1;border-radius:7px;padding:15px 8px;
+  text-align:center;background:#f8fbfd;cursor:pointer
+}
+.dropzone.drag{border-color:var(--blue);background:#edf7ff}
+.dropzone strong{display:block;font-size:10px;color:#355b78;margin-bottom:4px}
+.dropzone span{font-size:9px;color:var(--muted)}
+
+.layer-list{display:flex;flex-direction:column;gap:6px}
+.layer-item{
+  display:flex;align-items:center;gap:7px;border:1px solid var(--line);
+  padding:8px;border-radius:6px;background:#fff
+}
+.layer-item.active{border-color:#79b3da;background:#f2f8fd}
+.layer-item input{width:auto}
+.layer-swatch{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.layer-name{font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.layer-meta{font-size:8px;color:var(--muted)}
+.layer-actions{display:flex;gap:3px}
+.icon-btn{border:0;background:transparent;color:#708296;padding:3px 4px;font-size:12px}
+.icon-btn:hover{color:var(--blue)}
+
+.map-panel{position:relative;overflow:hidden}
+.map-top{
+  position:absolute;top:9px;left:9px;right:9px;z-index:700;
+  display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:8px
+}
+.map-chip{
+  background:#fff;border:1px solid #dce4ec;border-radius:5px;padding:7px 9px;
+  box-shadow:0 2px 8px #142b431c;font-size:9px;color:#3e5870;pointer-events:auto
+}
+.map-chip strong{color:var(--navy)}
+.map-controls{display:flex;gap:5px;pointer-events:auto}
+.map-controls select{width:auto;background:#fff;padding:7px;border:1px solid var(--line);border-radius:5px;font-size:9px}
+#map{position:absolute;inset:0;width:100%;height:100%;background:#dce8ed;z-index:1}
+.leaflet-container{font-family:Arial,sans-serif}
+.map-bottom{
+  position:absolute;bottom:9px;left:9px;z-index:700;max-width:80%;
+  background:#102b46eF;color:#fff;padding:7px 10px;border-radius:5px;
+  font-size:9px;pointer-events:none
+}
+.map-bottom b{color:#8bd5ee}
+.map-legend{
+  position:absolute;right:10px;bottom:10px;z-index:700;background:#fff;
+  border:1px solid var(--line);border-radius:6px;padding:8px 10px;
+  box-shadow:0 2px 8px #142b431c;font-size:9px;max-width:150px
+}
+.legend-title{font-weight:800;color:var(--navy);margin-bottom:5px}
+.legend-row{display:flex;align-items:center;gap:6px;margin:4px 0;color:#5b6f81}
+.legend-dot{width:9px;height:9px;border-radius:50%}
+.legend-line{width:14px;height:3px}
+.legend-poly{width:11px;height:9px;border:1px solid #1769aa;background:#1769aa44}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.metric{padding:10px;border:1px solid var(--line);border-radius:6px;background:#fbfcfe}
+.metric strong{display:block;font-size:20px;color:var(--navy);font-weight:800}
+.metric span{font-size:9px;color:var(--muted)}
+.metric small{font-size:8px;color:var(--green)}
+.chart-wrap{height:175px;position:relative;margin:5px 0 12px}
+.chart-wrap canvas{max-width:100%}
+.attribute-table-wrap{overflow:auto;max-height:250px;border:1px solid var(--line);border-radius:5px}
+table{width:100%;border-collapse:collapse;font-size:9px;white-space:nowrap}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #edf0f4}
+th{position:sticky;top:0;background:#f2f6fa;color:#4b6378;z-index:1}
+td{color:#52677a}
+tr:hover td{background:#f5f9fc}
+.tag{display:inline-block;padding:3px 6px;border-radius:4px;background:#eaf3fa;color:#38688e;font-size:8px;font-weight:700}
+.footer{
+  height:24px;flex-shrink:0;background:#102b46;color:#cbd9e6;
+  display:flex;align-items:center;justify-content:space-between;padding:0 13px;font-size:9px
+}
+#toast{
+  position:fixed;bottom:35px;left:50%;transform:translateX(-50%);
+  z-index:3000;background:#102b46;color:white;border-radius:6px;
+  padding:10px 15px;font-size:10px;box-shadow:0 4px 18px #0003;
+  opacity:0;pointer-events:none;transition:opacity .2s
+}
+#toast.show{opacity:1}
+.modal-backdrop{
+  position:fixed;inset:0;background:#102b4666;z-index:2000;
+  display:none;align-items:center;justify-content:center;padding:15px
+}
+.modal{
+  width:min(650px,100%);max-height:85vh;overflow:auto;background:#fff;
+  border-radius:9px;box-shadow:0 15px 50px #0003
+}
+.modal-head{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.modal-head h3{margin:0;font-size:13px;color:var(--navy)}
+.modal-content{padding:15px}
+.modal-close{border:0;background:none;font-size:18px;color:#65788b}
+pre{white-space:pre-wrap;word-break:break-word;background:#f4f7fa;padding:10px;border-radius:5px;font-size:9px;max-height:300px;overflow:auto}
+
+@media(max-width:1100px){
+ .workspace{grid-template-columns:260px minmax(300px,1fr)}
+ .right-panel{grid-column:1/-1;min-height:380px}
+ .map-panel{min-height:550px}
+}
+@media(max-width:700px){
+ .app{height:auto;min-height:100vh;overflow:visible}
+ header{height:auto;min-height:65px;padding:12px}
+ .header-pill{display:none}
+ .toolbar{height:auto;min-height:42px;padding:7px;flex-wrap:wrap}
+ .workspace{display:flex;flex-direction:column;overflow:visible}
+ .panel{min-height:350px}
+ .map-panel{height:520px;min-height:520px;flex:none}
+ #map{height:520px}
+ .left-panel{min-height:650px}
+ .right-panel{min-height:550px}
+ .footer{height:auto;min-height:28px;gap:5px;flex-wrap:wrap;padding:7px}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">⌖</div>
+    <div>
+      <h1>GAMBIA GEOJSON INTELLIGENCE</h1>
+      <p>Geospatial data engineering • Spatial analytics • Location intelligence</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-status" id="systemStatus">● Browser GIS ready</span>
+    <span class="header-pill">THE GAMBIA</span>
+    <span class="header-pill">GBoS GEOAI</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="primary" onclick="document.getElementById('fileInput').click()">＋ Add GeoJSON</button>
+  <button onclick="loadGambiaBoundaries()">Gambia boundaries</button>
+  <button onclick="loadSampleData()">Load sample data</button>
+  <button onclick="zoomToData()">Zoom to data</button>
+  <button onclick="exportActive()">Export active layer</button>
+  <button onclick="openModal('helpModal')">Help & methodology</button>
+  <div class="toolbar-spacer"></div>
+  <span class="muted" id="featureCounter">0 features loaded</span>
+</div>
+
+<div class="workspace">
+
+<!-- LEFT: DATA AND ANALYSIS CONTROLS -->
+<section class="panel left-panel">
+  <div class="panel-head">
+    <h2>01 / DATA & SPATIAL TOOLS</h2>
+    <span>WORKSPACE</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="section">Import geographic data</div>
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <strong>＋ Drop GeoJSON or JSON here</strong>
+      <span>Browse files • FeatureCollection • Feature • Geometry</span>
+    </div>
+    <input type="file" id="fileInput" accept=".geojson,.json,application/geo+json,application/json" multiple hidden>
+    <div class="row" style="margin-top:7px">
+      <button class="btn small" onclick="document.getElementById('urlInput').classList.toggle('hidden')">Load from URL</button>
+      <button class="btn small" onclick="validateActive()">Validate active</button>
+    </div>
+    <div id="urlInput" class="hidden" style="margin-top:7px">
+      <input id="remoteURL" placeholder="https://example.com/data.geojson">
+      <button class="btn primary" style="width:100%;margin-top:5px" onclick="loadFromURL()">Fetch GeoJSON URL</button>
+    </div>
+    <div class="status" id="importStatus">No external data loaded yet.</div>
+
+    <div class="section">Gambia administrative geography</div>
+    <label>Boundary level</label>
+    <select id="adminLevel">
+      <option value="ADM0">Country boundary (ADM0)</option>
+      <option value="ADM1">First-level administrative units (ADM1)</option>
+      <option value="ADM2">Second-level administrative units (ADM2)</option>
+    </select>
+    <button class="btn primary" style="width:100%;margin-top:7px" onclick="loadGambiaBoundaries()">Load selected boundaries</button>
+    <p class="muted">External reference boundaries are for exploratory mapping. For official statistics, use approved GBoS administrative and enumeration-area datasets.</p>
+
+    <div class="section">Loaded data layers</div>
+    <div id="layerList" class="layer-list">
+      <div class="muted">No layers loaded. Import a GeoJSON file or load sample data.</div>
+    </div>
+
+    <div class="section">Spatial operations</div>
+    <label>Operation</label>
+    <select id="operation">
+      <option value="buffer">Create buffer around features</option>
+      <option value="within">Select points within polygons</option>
+      <option value="nearest">Find nearest features</option>
+      <option value="intersect">Find intersecting features</option>
+    </select>
+
+    <div id="bufferControls">
+      <label>Buffer distance</label>
+      <div class="row">
+        <input id="bufferDistance" type="number" min="0.01" value="500" step="10">
+        <select id="bufferUnit">
+          <option value="meters">Metres</option>
+          <option value="kilometers">Kilometres</option>
+          <option value="miles">Miles</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="queryControls" class="hidden">
+      <label>Target layer</label>
+      <select id="targetLayer"></select>
+      <p class="muted" id="operationHint">Choose a target layer for this spatial operation.</p>
+    </div>
+
+    <button class="btn green" style="width:100%;margin-top:10px" onclick="runSpatialOperation()">▶ Run spatial operation</button>
+    <div class="status" id="operationStatus"></div>
+
+    <div class="section">Attribute filtering</div>
+    <label>Property / field</label>
+    <select id="filterField"><option value="">Select a field</option></select>
+    <label>Contains value</label>
+    <input id="filterValue" placeholder="Enter a value">
+    <div class="row" style="margin-top:7px">
+      <button class="btn primary" onclick="applyFilter()">Apply filter</button>
+      <button class="btn" onclick="clearFilter()">Clear</button>
+    </div>
+
+    <div class="section">Map display</div>
+    <label>Basemap</label>
+    <select id="basemap" onchange="changeBasemap(this.value)">
+      <option value="osm">OpenStreetMap</option>
+      <option value="satellite">Esri satellite</option>
+      <option value="terrain">OpenTopoMap terrain</option>
+      <option value="light">CARTO light</option>
+      <option value="dark">CARTO dark</option>
+    </select>
+
+    <label>Feature outline / fill colour</label>
+    <input id="layerColor" type="color" value="#1976b9">
+    <button class="btn" style="width:100%;margin-top:6px" onclick="restyleActive()">Apply layer style</button>
+
+    <div class="help">
+      <b>Coordinate reference:</b> GeoJSON coordinates are interpreted as WGS 84 longitude, latitude (EPSG:4326). Turf.js performs browser-side geodesic calculations for supported operations.
+    </div>
+  </div>
+</section>
+
+<!-- CENTRE: MAP -->
+<section class="panel map-panel">
+  <div id="map"></div>
+  <div class="map-top">
+    <div class="map-chip"><strong>GAMBIA GEOAI</strong> · Interactive spatial workspace</div>
+    <div class="map-controls">
+      <button class="btn small" onclick="zoomToGambia()">Gambia extent</button>
+      <button class="btn small" onclick="toggleLegend()">Legend</button>
+    </div>
+  </div>
+  <div class="map-bottom" id="mapStatus"><b>MAP READY</b> · Load a layer to begin spatial exploration.</div>
+  <div class="map-legend" id="mapLegend">
+    <div class="legend-title">MAP LEGEND</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#d94e55"></span> Point feature</div>
+    <div class="legend-row"><span class="legend-line" style="background:#1976b9"></span> Line feature</div>
+    <div class="legend-row"><span class="legend-poly"></span> Polygon feature</div>
+  </div>
+</section>
+
+<!-- RIGHT: ANALYTICS -->
+<section class="panel right-panel">
+  <div class="panel-head">
+    <h2>02 / GEOANALYTICS</h2>
+    <span id="activeLayerLabel">NO ACTIVE LAYER</span>
+  </div>
+  <div class="panel-body">
+
+    <div class="section">Workspace indicators</div>
+    <div class="metrics">
+      <div class="metric"><strong id="metricLayers">0</strong><span>Data layers</span></div>
+      <div class="metric"><strong id="metricFeatures">0</strong><span>Total features</span></div>
+      <div class="metric"><strong id="metricPoints">0</strong><span>Point features</span></div>
+      <div class="metric"><strong id="metricPolygons">0</strong><span>Polygon features</span></div>
+    </div>
+
+    <div class="section">Geometry distribution</div>
+    <div class="chart-wrap"><canvas id="geometryChart"></canvas></div>
+
+    <div class="section">Feature summary</div>
+    <div id="summaryText" class="help">Import a GeoJSON layer to generate a feature summary.</div>
+
+    <div class="section">Attribute distribution</div>
+    <label>Choose categorical attribute</label>
+    <select id="chartField" onchange="updateAnalytics()"><option value="">Select field</option></select>
+    <div class="chart-wrap"><canvas id="attributeChart"></canvas></div>
+
+    <div class="section">Attribute explorer</div>
+    <div class="row">
+      <input id="tableSearch" placeholder="Search attribute values..." oninput="renderAttributeTable()">
+      <button class="btn small" onclick="exportActiveCSV()">CSV</button>
+    </div>
+    <div class="muted" id="tableCount" style="margin:6px 0">No features to display.</div>
+    <div class="attribute-table-wrap">
+      <table id="attributeTable">
+        <thead><tr><th>Feature</th><th>Attributes</th></tr></thead>
+        <tbody><tr><td colspan="2">No active layer</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="section">Geometry measurements</div>
+    <div id="measurementSummary" class="muted">Measurements will appear when a layer is active.</div>
+
+    <div class="section">Data quality report</div>
+    <div id="validationSummary" class="help">No validation report available.</div>
+    <button class="btn" style="width:100%;margin-top:7px" onclick="validateActive()">Run GeoJSON quality check</button>
+  </div>
+</section>
+
+</div>
+
+<div class="footer">
+  <span>Produced by Ansu Singhateh | GIS Analyst | GIS / Cartography Unit | GBoS</span>
+  <span>GBoS GEOAI • Research and educational use</span>
+</div>
+
+</div>
+
+<div id="toast"></div>
+
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Gambia GeoJSON Intelligence — User guide</h3>
+      <button class="modal-close" onclick="closeModal('helpModal')">×</button>
+    </div>
+    <div class="modal-content">
+      <h4>1. Data ingestion</h4>
+      <p class="muted">Import GeoJSON or JSON files, or load a public GeoJSON URL. The application supports FeatureCollection, Feature and individual geometry objects.</p>
+      <h4>2. Administrative geography</h4>
+      <p class="muted">Load country, first-level or second-level administrative reference boundaries from geoBoundaries. These are not a substitute for authoritative GBoS boundaries.</p>
+      <h4>3. Spatial operations</h4>
+      <p class="muted">Buffer creates a new polygon around input features. Point-in-polygon selects points contained by polygons. Nearest finds the closest target feature to each source feature. Intersection identifies features that spatially intersect.</p>
+      <h4>4. Measurements</h4>
+      <p class="muted">Polygon area is measured in square kilometres and line length in kilometres using Turf.js. Results are geodesic approximations and may not replace projected, survey-grade measurements.</p>
+      <h4>5. Data handling</h4>
+      <p class="muted">Processing occurs in the browser. Uploaded data is not sent to a central server by this application. Public basemaps and boundary services are external dependencies.</p>
+      <h4>6. Limitations</h4>
+      <p class="muted">Large datasets may exceed browser memory or processing capacity. Geometry validation is a practical screening check, not a complete OGC topology certification. GeoJSON should use WGS 84 coordinates in longitude, latitude order.</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<script>
+// ======================================================
+// GAMBIA GEOJSON INTELLIGENCE
+// Browser-based spatial data workspace
+// ======================================================
+
+const state={
+  layers:[],
+  activeId:null,
+  mapLayers:{},
+  geometryChart:null,
+  attributeChart:null,
+  filteredIds:null,
+  map:null,
+  baseLayer:null,
+  selectedFeature:null
+};
+
+const $=id=>document.getElementById(id);
+const palette=["#1976b9","#d95f59","#239b77","#9367c5","#df9a35","#29a8b8","#667d94"];
+
+function uid(){
+  return "layer_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
+}
+
+function toast(message){
+  const el=$("toast");
+  el.textContent=message;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"),2600);
+}
+
+function setStatus(message){
+  $("systemStatus").textContent="● "+message;
+}
+
+function activeLayer(){
+  return state.layers.find(l=>l.id===state.activeId)||null;
+}
+
+function featureCollection(data){
+  if(!data) throw new Error("Empty data");
+
+  if(data.type==="FeatureCollection"&&Array.isArray(data.features)){
+    return data;
+  }
+  if(data.type==="Feature"){
+    return {type:"FeatureCollection",features:[data]};
+  }
+  if(["Point","MultiPoint","LineString","MultiLineString","Polygon","MultiPolygon","GeometryCollection"].includes(data.type)){
+    return {type:"FeatureCollection",features:[{
+      type:"Feature",properties:{},geometry:data
+    }]};
+  }
+  throw new Error("Unsupported GeoJSON structure");
+}
+
+// ---------------- MAP ----------------
+
+state.map=L.map("map",{zoomControl:true,preferCanvas:true})
+  .setView([13.45,-15.55],8);
+
+const baseMaps={
+  osm:L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,attribution:"© OpenStreetMap contributors"
+  }),
+  satellite:L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
+    maxZoom:19,attribution:"Tiles © Esri"
+  }),
+  terrain:L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{
+    maxZoom:17,attribution:"© OpenTopoMap"
+  }),
+  light:L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{
+    maxZoom:19,attribution:"© OpenStreetMap © CARTO"
+  }),
+  dark:L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+    maxZoom:19,attribution:"© OpenStreetMap © CARTO"
+  })
+};
+
+state.baseLayer=baseMaps.osm;
+state.baseLayer.addTo(state.map);
+
+function changeBasemap(name){
+  if(state.baseLayer)state.map.removeLayer(state.baseLayer);
+  state.baseLayer=baseMaps[name]||baseMaps.osm;
+  state.baseLayer.addTo(state.map);
+}
+
+function zoomToGambia(){
+  state.map.fitBounds([[13.05,-16.85],[13.83,-13.75]],{padding:[25,25]});
+}
+
+function zoomToData(){
+  const layer=activeLayer();
+  if(!layer){zoomToGambia();return;}
+  try{
+    const bounds=L.geoJSON(layer.data).getBounds();
+    if(bounds.isValid())state.map.fitBounds(bounds,{padding:[25,25],maxZoom:15});
+    else toast("No valid geographic extent found.");
+  }catch(e){toast("Unable to calculate layer extent.");}
+}
+
+function toggleLegend(){
+  $("mapLegend").classList.toggle("hidden");
+}
+
+window.addEventListener("resize",()=>setTimeout(()=>state.map.invalidateSize(true),200));
+setTimeout(()=>state.map.invalidateSize(true),500);
+setTimeout(()=>state.map.invalidateSize(true),1300);
+
+// ---------------- LAYER INGESTION ----------------
+
+function addLayer(data,name,source="Imported"){
+  const fc=featureCollection(data);
+  const id=uid();
+  const layer={
+    id,
+    name:name||"GeoJSON layer",
+    source,
+    data:fc,
+    visible:true,
+    color:palette[state.layers.length%palette.length],
+    filtered:null,
+    leaflet:null,
+    validation:null
+  };
+  state.layers.push(layer);
+  state.activeId=id;
+  drawLayer(layer);
+  renderLayers();
+  refreshAll();
+  zoomToData();
+  return layer;
+}
+
+function drawLayer(layer){
+  if(layer.leaflet){
+    state.map.removeLayer(layer.leaflet);
+  }
+
+  const features=layer.filtered||layer.data.features;
+  const fc={type:"FeatureCollection",features};
+
+  layer.leaflet=L.geoJSON(fc,{
+    pointToLayer:(feature,latlng)=>L.circleMarker(latlng,{
+      radius:6,color:"#fff",weight:1.5,fillColor:layer.color,fillOpacity:.9
+    }),
+    style:()=>({
+      color:layer.color,
+      weight:2,
+      opacity:.9,
+      fillColor:layer.color,
+      fillOpacity:.20
+    }),
+    onEachFeature:(feature,leafletLayer)=>{
+      leafletLayer.on("click",()=>{
+        state.selectedFeature=feature;
+        showFeaturePopup(feature,leafletLayer);
+      });
+    }
+  });
+
+  if(layer.visible)layer.leaflet.addTo(state.map);
+}
+
+function showFeaturePopup(feature,leafletLayer){
+  const props=feature.properties||{};
+  const keys=Object.keys(props).slice(0,12);
+  let html="<b>Feature attributes</b><hr>";
+  keys.forEach(k=>{
+    html+="<div style='font-size:11px;margin:4px 0'><b>"+escapeHTML(k)+":</b> "+escapeHTML(String(props[k]??""))+"</div>";
+  });
+  leafletLayer.bindPopup(html).openPopup();
+}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+
+function renderLayers(){
+  const box=$("layerList");
+  box.innerHTML="";
+
+  if(!state.layers.length){
+    box.innerHTML='<div class="muted">No layers loaded.</div>';
+    updateTargetOptions();
+    return;
+  }
+
+  state.layers.forEach(layer=>{
+    const item=document.createElement("div");
+    item.className="layer-item"+(layer.id===state.activeId?" active":"");
+
+    const check=document.createElement("input");
+    check.type="checkbox";
+    check.checked=layer.visible;
+    check.title="Toggle visibility";
+    check.onchange=()=>{
+      layer.visible=check.checked;
+      if(layer.visible)layer.leaflet.addTo(state.map);
+      else state.map.removeLayer(layer.leaflet);
+    };
+
+    const swatch=document.createElement("span");
+    swatch.className="layer-swatch";
+    swatch.style.background=layer.color;
+
+    const name=document.createElement("div");
+    name.className="layer-name";
+    name.textContent=layer.name;
+    name.title=layer.name;
+    name.onclick=()=>setActive(layer.id);
+
+    const meta=document.createElement("div");
+    meta.className="layer-meta";
+    meta.textContent=layer.data.features.length;
+
+    const actions=document.createElement("div");
+    actions.className="layer-actions";
+
+    const zoom=document.createElement("button");
+    zoom.className="icon-btn";
+    zoom.textContent="⌖";
+    zoom.title="Zoom to layer";
+    zoom.onclick=()=>{setActive(layer.id);zoomToData();};
+
+    const remove=document.createElement("button");
+    remove.className="icon-btn";
+    remove.textContent="×";
+    remove.title="Remove layer";
+    remove.onclick=()=>removeLayer(layer.id);
+
+    actions.append(zoom,remove);
+    item.append(check,swatch,name,meta,actions);
+    box.appendChild(item);
+  });
+
+  updateTargetOptions();
+}
+
+function setActive(id){
+  state.activeId=id;
+  state.filteredIds=null;
+  renderLayers();
+  refreshAll();
+}
+
+function removeLayer(id){
+  const layer=state.layers.find(l=>l.id===id);
+  if(!layer)return;
+  if(layer.leaflet)state.map.removeLayer(layer.leaflet);
+  state.layers=state.layers.filter(l=>l.id!==id);
+  state.activeId=state.layers.length?state.layers[state.layers.length-1].id:null;
+  state.filteredIds=null;
+  renderLayers();
+  refreshAll();
+  toast("Layer removed.");
+}
+
+function updateTargetOptions(){
+  const select=$("targetLayer");
+  const old=select.value;
+  select.innerHTML="";
+  state.layers.filter(l=>l.id!==state.activeId).forEach(l=>{
+    const opt=document.createElement("option");
+    opt.value=l.id;
+    opt.textContent=l.name;
+    select.appendChild(opt);
+  });
+  if([...select.options].some(o=>o.value===old))select.value=old;
+}
+
+// ---------------- FILE IMPORT ----------------
+
+$("fileInput").addEventListener("change",async e=>{
+  for(const file of e.target.files){
+    try{
+      const text=await file.text();
+      const data=JSON.parse(text);
+      const layer=addLayer(data,file.name,"File upload");
+      const report=validateGeoJSON(layer.data);
+      layer.validation=report;
+      toast(file.name+" loaded: "+layer.data.features.length+" features.");
+    }catch(err){
+      toast("Import failed: "+file.name+" — "+err.message);
+    }
+  }
+  e.target.value="";
+});
+
+const dropzone=$("dropzone");
+dropzone.addEventListener("dragover",e=>{
+  e.preventDefault();dropzone.classList.add("drag");
+});
+dropzone.addEventListener("dragleave",()=>dropzone.classList.remove("drag"));
+dropzone.addEventListener("drop",async e=>{
+  e.preventDefault();dropzone.classList.remove("drag");
+  for(const file of e.dataTransfer.files){
+    try{
+      const data=JSON.parse(await file.text());
+      addLayer(data,file.name,"Drag and drop");
+      toast(file.name+" imported.");
+    }catch(err){toast("Could not read "+file.name+": "+err.message);}
+  }
+});
+
+async function loadFromURL(){
+  const url=$("remoteURL").value.trim();
+  if(!url){toast("Enter a GeoJSON URL.");return;}
+  try{
+    $("importStatus").textContent="Fetching remote GeoJSON...";
+    const response=await fetch(url);
+    if(!response.ok)throw new Error("HTTP "+response.status);
+    const data=await response.json();
+    addLayer(data,url.split("/").pop()||"Remote GeoJSON","Remote URL");
+    $("importStatus").textContent="Remote data loaded.";
+    toast("Remote GeoJSON imported.");
+  }catch(err){
+    $("importStatus").textContent="URL import failed: "+err.message;
+    toast("URL failed. The source may block browser CORS requests.");
+  }
+}
+
+// ---------------- GAMBIA ADMIN BOUNDARIES ----------------
+
+async function loadGambiaBoundaries(){
+  const level=$("adminLevel").value;
+  const status=$("importStatus");
+  status.textContent="Requesting Gambia "+level+" reference boundaries...";
+
+  try{
+    const api="https://www.geoboundaries.org/api/current/gbOpen/GMB/"+level+"/";
+    const response=await fetch(api);
+    if(!response.ok)throw new Error("Boundary API returned "+response.status);
+
+    const metadata=await response.json();
+    const downloadURL=metadata.gjDownloadURL;
+    if(!downloadURL)throw new Error("No GeoJSON download URL was returned.");
+
+    const geoResponse=await fetch(downloadURL);
+    if(!geoResponse.ok)throw new Error("Boundary download failed.");
+
+    const geojson=await geoResponse.json();
+    const name="Gambia "+level+" reference boundaries";
+    const layer=addLayer(geojson,name,"geoBoundaries (gbOpen)");
+
+    status.textContent="Loaded "+layer.data.features.length+" administrative features.";
+    layer.validation=validateGeoJSON(layer.data);
+    toast("Gambia "+level+" boundaries loaded.");
+  }catch(err){
+    status.textContent="Could not load external boundaries: "+err.message;
+    toast("Boundary service unavailable. Import an administrative GeoJSON file instead.");
+  }
+}
+
+// ---------------- GEOJSON VALIDATION ----------------
+
+function validateGeoJSON(fc){
+  const report={
+    total:fc.features.length,
+    valid:0,
+    missingGeometry:0,
+    invalidGeometry:0,
+    missingProperties:0,
+    geometryTypes:{},
+    issues:[]
+  };
+
+  fc.features.forEach((f,i)=>{
+    if(!f||f.type!=="Feature"){
+      report.invalidGeometry++;
+      report.issues.push("Feature "+i+": object is not a GeoJSON Feature.");
+      return;
+    }
+
+    if(!f.geometry){
+      report.missingGeometry++;
+      report.issues.push("Feature "+i+": missing geometry.");
+      return;
+    }
+
+    if(!f.properties)report.missingProperties++;
+
+    const type=f.geometry.type;
+    report.geometryTypes[type]=(report.geometryTypes[type]||0)+1;
+
+    try{
+      if(type==="GeometryCollection"){
+        if(!Array.isArray(f.geometry.geometries))throw new Error("Missing geometries array");
+      }else{
+        if(!Array.isArray(f.geometry.coordinates))throw new Error("Missing coordinates");
+        checkCoordinates(f.geometry.coordinates);
+      }
+      report.valid++;
+    }catch(err){
+      report.invalidGeometry++;
+      report.issues.push("Feature "+i+": "+err.message);
+    }
+  });
+
+  return report;
+}
+
+function checkCoordinates(coords){
+  if(!Array.isArray(coords))throw new Error("Coordinates are not an array.");
+  if(typeof coords[0]==="number"){
+    if(coords.length<2||!Number.isFinite(coords[0])||!Number.isFinite(coords[1])){
+      throw new Error("Invalid coordinate pair.");
+    }
+    if(coords[0]<-180||coords[0]>180||coords[1]<-90||coords[1]>90){
+      throw new Error("Coordinate outside longitude/latitude range.");
+    }
+    return;
+  }
+  if(!coords.length)throw new Error("Empty coordinate array.");
+  coords.forEach(checkCoordinates);
+}
+
+function validateActive(){
+  const layer=activeLayer();
+  if(!layer){toast("Load a layer first.");return;}
+  const report=validateGeoJSON(layer.data);
+  layer.validation=report;
+
+  const typeSummary=Object.entries(report.geometryTypes)
+    .map(([k,v])=>k+": "+v).join("<br>");
+
+  $("validationSummary").innerHTML=
+    "<b>Validation summary</b><br>"+
+    "Features: "+report.total+"<br>"+
+    "Structurally valid: "+report.valid+"<br>"+
+    "Missing geometry: "+report.missingGeometry+"<br>"+
+    "Invalid geometry: "+report.invalidGeometry+"<br>"+
+    "Missing properties: "+report.missingProperties+"<br><br>"+
+    "<b>Geometry types</b><br>"+(typeSummary||"None")+
+    (report.issues.length?"<br><br><b>Issues</b><br>"+report.issues.slice(0,8).map(escapeHTML).join("<br>"):"");
+
+  toast("Validation completed.");
+}
+
+// ---------------- GEOMETRY HELPERS ----------------
+
+function geomType(feature){
+  return feature?.geometry?.type||"Unknown";
+}
+
+function geometryCounts(features){
+  const counts={Point:0,Line:0,Polygon:0,Other:0};
+  features.forEach(f=>{
+    const t=geomType(f);
+    if(t==="Point"||t==="MultiPoint")counts.Point++;
+    else if(t.includes("Line"))counts.Line++;
+    else if(t.includes("Polygon"))counts.Polygon++;
+    else counts.Other++;
+  });
+  return counts;
+}
+
+function safeArea(feature){
+  try{
+    const t=geomType(feature);
+    if(t.includes("Polygon"))return turf.area(feature)/1e6;
+  }catch(e){}
+  return null;
+}
+
+function safeLength(feature){
+  try{
+    if(geomType(feature).includes("Line"))return turf.length(feature,{units:"kilometers"});
+  }catch(e){}
+  return null;
+}
+
+// ---------------- SPATIAL OPERATIONS ----------------
+
+$("operation").addEventListener("change",()=>{
+  const operation=$("operation").value;
+  $("bufferControls").classList.toggle("hidden",operation!=="buffer");
+  $("queryControls").classList.toggle("hidden",operation==="buffer");
+  const hints={
+    within:"Active layer should contain points. Target layer should contain polygons.",
+    nearest:"For each active feature, identify its nearest feature in the target layer.",
+    intersect:"Identify active features that intersect at least one target feature."
+  };
+  $("operationHint").textContent=hints[operation]||"Choose a target layer.";
+});
+
+function runSpatialOperation(){
+  const source=activeLayer();
+  if(!source){toast("Select or load an active source layer.");return;}
+
+  const operation=$("operation").value;
+  $("operationStatus").textContent="Processing...";
+
+  try{
+    let output=[];
+    const sourceFeatures=source.filtered||source.data.features;
+
+    if(operation==="buffer"){
+      const distance=Number($("bufferDistance").value);
+      if(!Number.isFinite(distance)||distance<=0)throw new Error("Enter a positive buffer distance.");
+      const unit=$("bufferUnit").value;
+      sourceFeatures.forEach((f,i)=>{
+        const buffered=turf.buffer(f,distance,{units:unit});
+        if(buffered){
+          buffered.properties={
+            ...(f.properties||{}),
+            source_feature:i,
+            buffer_distance:distance,
+            buffer_unit:unit,
+            operation:"buffer"
+          };
+          output.push(buffered);
+        }
+      });
+    }else{
+      const target=state.layers.find(l=>l.id===$("targetLayer").value);
+      if(!target)throw new Error("Select a valid target layer.");
+      const targets=target.filtered||target.data.features;
+      if(!targets.length)throw new Error("Target layer has no features.");
+
+      if(operation==="within"){
+        sourceFeatures.forEach((f,i)=>{
+          if(!geomType(f).includes("Point"))return;
+          const matches=targets.filter(p=>{
+            try{return geomType(p).includes("Polygon")&&turf.booleanPointInPolygon(f,p);}
+            catch(e){return false;}
+          });
+          if(matches.length){
+            output.push({
+              ...f,
+              properties:{
+                ...(f.properties||{}),
+                matched_polygons:matches.length,
+                operation:"point_in_polygon"
+              }
+            });
+          }
+        });
+      }
+
+      if(operation==="nearest"){
+        sourceFeatures.forEach((f,i)=>{
+          let best=null,bestDistance=Infinity;
+          targets.forEach((t,j)=>{
+            try{
+              const d=turf.distance(turf.centroid(f),turf.centroid(t),{units:"kilometers"});
+              if(d<bestDistance){bestDistance=d;best=t;j;}
+            }catch(e){}
+          });
+          if(best){
+            output.push({
+              ...f,
+              properties:{
+                ...(f.properties||{}),
+                nearest_feature:best.properties?.name||best.properties?.NAME||"Target feature",
+                nearest_distance_km:bestDistance,
+                operation:"nearest_feature"
+              }
+            });
+          }
+        });
+      }
+
+      if(operation==="intersect"){
+        sourceFeatures.forEach((f,i)=>{
+          const matches=targets.filter(t=>{
+            try{return turf.booleanIntersects(f,t);}
+            catch(e){return false;}
+          });
+          if(matches.length){
+            output.push({
+              ...f,
+              properties:{
+                ...(f.properties||{}),
+                intersection_count:matches.length,
+                operation:"intersection"
+              }
+            });
+          }
+        });
+      }
+    }
+
+    if(!output.length)throw new Error("No results returned. Check geometry types and spatial overlap.");
+
+    const result=addLayer({
+      type:"FeatureCollection",
+      features:output
+    },source.name+" — "+operation+" result","Spatial analysis");
+
+    $("operationStatus").textContent=output.length+" result features created.";
+    result.validation=validateGeoJSON(result.data);
+    toast("Spatial operation completed: "+output.length+" features.");
+  }catch(err){
+    $("operationStatus").textContent="Operation failed: "+err.message;
+    toast(err.message);
+  }
+}
+
+// ---------------- ATTRIBUTE FILTER ----------------
+
+function updateFilterFields(){
+  const layer=activeLayer();
+  const fields=new Set();
+  if(layer)layer.data.features.forEach(f=>{
+    Object.keys(f.properties||{}).forEach(k=>fields.add(k));
+  });
+
+  const select=$("filterField");
+  const chart=$("chartField");
+  const previous=select.value;
+  const previousChart=chart.value;
+
+  select.innerHTML='<option value="">Select a field</option>';
+  chart.innerHTML='<option value="">Select field</option>';
+
+  [...fields].sort().forEach(field=>{
+    [select,chart].forEach(s=>{
+      const option=document.createElement("option");
+      option.value=field;
+      option.textContent=field;
+      s.appendChild(option);
+    });
+  });
+
+  select.value=previous;
+  chart.value=previousChart;
+}
+
+function applyFilter(){
+  const layer=activeLayer();
+  const field=$("filterField").value;
+  const value=$("filterValue").value.toLowerCase().trim();
+  if(!layer||!field){toast("Select an active layer and property.");return;}
+
+  layer.filtered=layer.data.features.filter(f=>
+    String(f.properties?.[field]??"").toLowerCase().includes(value)
+  );
+
+  drawLayer(layer);
+  refreshAll();
+  toast(layer.filtered.length+" features match the filter.");
+}
+
+function clearFilter(){
+  const layer=activeLayer();
+  if(!layer)return;
+  layer.filtered=null;
+  drawLayer(layer);
+  $("filterValue").value="";
+  refreshAll();
+  toast("Filter cleared.");
+}
+
+// ---------------- STYLING ----------------
+
+function restyleActive(){
+  const layer=activeLayer();
+  if(!layer){toast("No active layer.");return;}
+  layer.color=$("layerColor").value;
+  drawLayer(layer);
+  renderLayers();
+  toast("Layer style updated.");
+}
+
+// ---------------- ANALYTICS ----------------
+
+function refreshAll(){
+  updateMetrics();
+  updateFilterFields();
+  updateAnalytics();
+  renderAttributeTable();
+  renderLayers();
+  updateMapStatus();
+}
+
+function updateMetrics(){
+  const total=state.layers.reduce((s,l)=>s+l.data.features.length,0);
+  const active=activeLayer();
+  const features=active?(active.filtered||active.data.features):[];
+  const counts=geometryCounts(features);
+
+  $("metricLayers").textContent=state.layers.length;
+  $("metricFeatures").textContent=total;
+  $("metricPoints").textContent=counts.Point;
+  $("metricPolygons").textContent=counts.Polygon;
+  $("featureCounter").textContent=total+" features loaded";
+  $("activeLayerLabel").textContent=active?active.name.toUpperCase():"NO ACTIVE LAYER";
+}
+
+function updateMapStatus(){
+  const layer=activeLayer();
+  $("mapStatus").innerHTML=layer
+    ?"<b>ACTIVE LAYER</b> · "+escapeHTML(layer.name)+" · "+(layer.filtered||layer.data.features).length+" displayed features"
+    :"<b>MAP READY</b> · Load a layer to begin spatial exploration.";
+}
+
+function updateAnalytics(){
+  const layer=activeLayer();
+  const features=layer?(layer.filtered||layer.data.features):[];
+  const counts=geometryCounts(features);
+
+  if(state.geometryChart)state.geometryChart.destroy();
+  state.geometryChart=new Chart($("geometryChart"),{
+    type:"doughnut",
+    data:{
+      labels:["Points","Lines","Polygons","Other"],
+      datasets:[{data:[counts.Point,counts.Line,counts.Polygon,counts.Other],
+        backgroundColor:["#d95f59","#1976b9","#239b77","#a4afba"],borderWidth:1}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:"bottom",labels:{boxWidth:9,font:{size:9}}}}
+    }
+  });
+
+  if(state.attributeChart)state.attributeChart.destroy();
+
+  const field=$("chartField").value;
+  const values={};
+  if(layer&&field){
+    features.forEach(f=>{
+      const value=String(f.properties?.[field]??"(empty)");
+      values[value]=(values[value]||0)+1;
+    });
+  }
+
+  const sorted=Object.entries(values).sort((a,b)=>b[1]-a[1]).slice(0,12);
+
+  state.attributeChart=new Chart($("attributeChart"),{
+    type:"bar",
+    data:{
+      labels:sorted.map(x=>x[0].length>20?x[0].slice(0,20)+"…":x[0]),
+      datasets:[{label:"Feature count",data:sorted.map(x=>x[1]),backgroundColor:"#1976b9",borderRadius:3}]
+    },
+    options:{
+      indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{font:{size:8}}},y:{ticks:{font:{size:8}}}}
+    }
+  });
+
+  if(!layer){
+    $("summaryText").textContent="Import a GeoJSON layer to generate a feature summary.";
+    $("measurementSummary").textContent="No active layer.";
+    return;
+  }
+
+  const total=features.length;
+  const areaValues=features.map(safeArea).filter(v=>v!==null);
+  const lengthValues=features.map(safeLength).filter(v=>v!==null);
+  const totalArea=areaValues.reduce((a,b)=>a+b,0);
+  const totalLength=lengthValues.reduce((a,b)=>a+b,0);
+
+  $("summaryText").innerHTML=
+    "<b>"+escapeHTML(layer.name)+"</b><br>"+
+    "Features analysed: "+total+"<br>"+
+    "Geometry types: "+Object.entries(counts).filter(x=>x[1]).map(x=>x[0]+" ("+x[1]+")").join(", ")+"<br>"+
+    "Source: "+escapeHTML(layer.source);
+
+  $("measurementSummary").innerHTML=
+    "Polygon features measured: "+areaValues.length+"<br>"+
+    "Combined polygon area: "+totalArea.toLocaleString(undefined,{maximumFractionDigits:2})+" km²<br>"+
+    "Line features measured: "+lengthValues.length+"<br>"+
+    "Combined line length: "+totalLength.toLocaleString(undefined,{maximumFractionDigits:2})+" km";
+}
+
+// ---------------- ATTRIBUTE TABLE ----------------
+
+function renderAttributeTable(){
+  const layer=activeLayer();
+  const tbody=$("attributeTable").querySelector("tbody");
+  tbody.innerHTML="";
+
+  if(!layer){
+    tbody.innerHTML='<tr><td colspan="2">No active layer</td></tr>';
+    $("tableCount").textContent="No features to display.";
+    return;
+  }
+
+  const features=layer.filtered||layer.data.features;
+  const search=$("tableSearch").value.toLowerCase();
+  const shown=features.filter((f,i)=>{
+    const text=JSON.stringify(f.properties||{}).toLowerCase()+" "+i;
+    return text.includes(search);
+  });
+
+  $("tableCount").textContent="Showing "+Math.min(100,shown.length)+" of "+shown.length+" matching features.";
+
+  shown.slice(0,100).forEach((f,i)=>{
+    const tr=document.createElement("tr");
+    const td1=document.createElement("td");
+    const td2=document.createElement("td");
+
+    td1.textContent=i+1;
+
+    const props=f.properties||{};
+    const entries=Object.entries(props).slice(0,8);
+    td2.textContent=entries.map(([k,v])=>k+": "+String(v)).join(" | ")||"No properties";
+
+    tr.append(td1,td2);
+    tr.title="Click to zoom to this feature";
+    tr.style.cursor="pointer";
+    tr.onclick=()=>{
+      try{
+        const bounds=L.geoJSON(f).getBounds();
+        if(bounds.isValid())state.map.fitBounds(bounds,{maxZoom:17});
+        else if(f.geometry.type==="Point")state.map.setView([f.geometry.coordinates[1],f.geometry.coordinates[0]],17);
+      }catch(e){}
+    };
+    tbody.appendChild(tr);
+  });
+}
+
+// ---------------- EXPORT ----------------
+
+function download(content,filename,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1200);
+}
+
+function exportActive(){
+  const layer=activeLayer();
+  if(!layer){toast("No active layer.");return;}
+  const fc={type:"FeatureCollection",features:layer.filtered||layer.data.features};
+  download(JSON.stringify(fc,null,2),safeFilename(layer.name)+".geojson","application/geo+json");
+  toast("GeoJSON export created.");
+}
+
+function exportActiveCSV(){
+  const layer=activeLayer();
+  if(!layer){toast("No active layer.");return;}
+  const features=layer.filtered||layer.data.features;
+  const fields=new Set(["geometry_type"]);
+  features.forEach(f=>Object.keys(f.properties||{}).forEach(k=>fields.add(k)));
+  const columns=[...fields];
+  const quote=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+  const rows=[columns.map(quote).join(",")];
+
+  features.forEach(f=>{
+    const row=columns.map(k=>k==="geometry_type"?geomType(f):(f.properties||{})[k]);
+    rows.push(row.map(quote).join(","));
+  });
+
+  download("\uFEFF"+rows.join("\r\n"),safeFilename(layer.name)+".csv","text/csv;charset=utf-8");
+  toast("CSV export created.");
+}
+
+function safeFilename(name){
+  return String(name).replace(/[^a-z0-9_-]+/gi,"_").replace(/^_+|_+$/g,"")||"geojson_data";
+}
+
+// ---------------- SAMPLE GAMBIA DATA ----------------
+
+function loadSampleData(){
+  const sample={
+    type:"FeatureCollection",
+    name:"Illustrative Gambia locations",
+    features:[
+      {type:"Feature",properties:{name:"Banjul",category:"Administrative centre",example:true},geometry:{type:"Point",coordinates:[-16.578,-13.454]}},
+      {type:"Feature",properties:{name:"Brikama",category:"Urban centre",example:true},geometry:{type:"Point",coordinates:[-16.655,-13.271]}},
+      {type:"Feature",properties:{name:"Farafenni",category:"Urban centre",example:true},geometry:{type:"Point",coordinates:[-15.595,13.566]}},
+      {type:"Feature",properties:{name:"Basse",category:"Urban centre",example:true},geometry:{type:"Point",coordinates:[-14.22,13.31]}},
+      {type:"Feature",properties:{name:"Kerewan",category:"Urban centre",example:true},geometry:{type:"Point",coordinates:[-16.09,13.49]}},
+      {type:"Feature",properties:{name:"Gambia illustrative route",category:"Line",example:true},geometry:{type:"LineString",coordinates:[[-16.58,13.45],[-16.3,13.48],[-15.6,13.56],[-15.0,13.4],[-14.2,13.31]]}},
+      {type:"Feature",properties:{name:"Illustrative study zone",category:"Demonstration polygon",example:true},geometry:{type:"Polygon",coordinates:[[[-16.78,13.18],[-16.45,13.18],[-16.45,13.55],[-16.78,13.55],[-16.78,13.18]]]}}
+    ]
+  };
+
+  addLayer(sample,"Gambia sample locations","Built-in demonstration");
+  toast("Sample data loaded. These are illustrative features, not official locations or boundaries.");
+}
+
+// ---------------- MODAL ----------------
+
+function openModal(id){$(id).style.display="flex";}
+function closeModal(id){$(id).style.display="none";}
+
+document.querySelectorAll(".modal-backdrop").forEach(el=>{
+  el.addEventListener("click",e=>{
+    if(e.target===el)el.style.display="none";
+  });
+});
+
+// ---------------- INITIALISE ----------------
+
+$("operation").dispatchEvent(new Event("change"));
+renderLayers();
+refreshAll();
+zoomToGambia();
+setStatus("Browser GIS ready");
+
+</script>
+</body>
+</html>
